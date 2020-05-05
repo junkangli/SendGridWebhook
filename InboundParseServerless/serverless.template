@@ -1,38 +1,26 @@
-{
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Transform": "AWS::Serverless-2016-10-31",
-  "Description": "SendGrid Inbound Email Parse Webhook AWS Serverless Application",
-  "Resources": {
-    "SendGridWebhook": {
-      "Type": "AWS::Serverless::Function",
-      "Properties": {
-        "Handler": "InboundParseServerless::InboundParseServerless.Functions::InboundParse",
-        "Runtime": "dotnetcore3.1",
-        "CodeUri": "",
-        "MemorySize": 128,
-        "Timeout": 30,
-        "Role": null,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "Events": {
-          "InboundParse": {
-            "Type": "HttpApi",
-            "Properties": {
-              "Path": "/",
-              "Method": "POST"
-            }
-          }
-        }
-      }
-    }
-  },
-  "Outputs": {
-    "ApiURL": {
-      "Description": "API endpoint URL",
-      "Value": {
-        "Fn::Sub": "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
-      }
-    }
-  }
-}
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SendGrid Inbound Email Parse Webhook AWS Serverless Application
+Resources:
+  SendGridWebhook:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: 'InboundParseServerless::InboundParseServerless.Function::InboundParse'
+      Runtime: dotnetcore3.1
+      MemorySize: 128
+      Timeout: 30
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - SSMParameterReadPolicy:
+            ParameterName: inboundparse/authkey
+      Events:
+        InboundParse:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: POST
+Outputs:
+  ApiURL:
+    Description: API endpoint URL
+    Value: !Sub 'https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/'
+      

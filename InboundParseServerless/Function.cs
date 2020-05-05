@@ -1,21 +1,55 @@
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
+using Amazon.SimpleSystemsManagement;
+using Amazon.SimpleSystemsManagement.Model;
 using StrongGrid;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Threading.Tasks;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 namespace InboundParseServerless
 {
-    public class Functions
+    public class Function
     {
-        public APIGatewayHttpApiV2ProxyResponse InboundParse(APIGatewayHttpApiV2ProxyRequest request, ILambdaContext context)
+        public Function()
+        {
+            _ssmClient = new AmazonSimpleSystemsManagementClient();
+        }
+
+        private readonly AmazonSimpleSystemsManagementClient _ssmClient;
+
+        private const string AuthenticationKeyParameterName = "/inboundparse/authkey";
+        private const string AuthenticationQueryParameterKey = "authkey";
+
+        public async Task<APIGatewayHttpApiV2ProxyResponse> InboundParse(APIGatewayHttpApiV2ProxyRequest request, ILambdaContext context)
         {
             APIGatewayHttpApiV2ProxyResponse response;
+
+            var getParameterResponse = await _ssmClient.GetParameterAsync(new GetParameterRequest 
+            { 
+                Name = AuthenticationKeyParameterName,
+                WithDecryption = true
+            });
+            var authenticationKey = getParameterResponse?.Parameter?.Value;
+
+            string authenticationKeyPresented = null;
+            request.QueryStringParameters?.TryGetValue(AuthenticationQueryParameterKey, out authenticationKeyPresented);
+
+            if (string.IsNullOrEmpty(authenticationKeyPresented) || string.IsNullOrEmpty(authenticationKey)
+                || authenticationKeyPresented != authenticationKey)
+            {
+                context.Logger.LogLine($"Failed to authenticate.");
+
+                return new APIGatewayHttpApiV2ProxyResponse
+                {
+                    StatusCode = (int)HttpStatusCode.Unauthorized
+                };
+            }
 
             try
             {
