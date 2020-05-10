@@ -66,6 +66,10 @@ namespace InboundParseServerless
                 var parser = new WebhookParser();
                 var inboundEmail = parser.ParseInboundEmailWebhook(requestBody);
                 context.Logger.LogLine($"InboundEmail Subject:\n{inboundEmail.Subject}");
+                context.Logger.LogLine($"InboundEmail To:\n{inboundEmail.To[0].Email}");
+                context.Logger.LogLine($"InboundEmail From:\n{inboundEmail.From.Email}");
+                context.Logger.LogLine($"InboundEmail DKIM:\n{inboundEmail.Dkim}");
+                context.Logger.LogLine($"InboundEmail SPF:\n{inboundEmail.Spf}");
 
                 response = new APIGatewayHttpApiV2ProxyResponse
                 {
