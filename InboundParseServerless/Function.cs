@@ -71,6 +71,8 @@ namespace InboundParseServerless
                 context.Logger.LogLine($"InboundEmail DKIM:\n{inboundEmail.Dkim}");
                 context.Logger.LogLine($"InboundEmail SPF:\n{inboundEmail.Spf}");
 
+                context.Logger.LogLine($"InboundEmail Envelope.From:\n{inboundEmail.Envelope.From}");
+
                 response = new APIGatewayHttpApiV2ProxyResponse
                 {
                     StatusCode = (int)HttpStatusCode.OK,
